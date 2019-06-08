@@ -21,7 +21,7 @@ using (var transaction = connection.BeginTransaction())
 }
 ```
 
-The problem here is that it's very easy to forget just a single transaction parameter.
+The problem here is that it's very easy to forget the transaction parameter.
 
 This project provides a `DapperContext` class that abstracts this away. The above code would look as follows:
 
