@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DapperContext\DapperContext.csproj" />
+  </ItemGroup>
+</Project>
