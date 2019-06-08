@@ -9,6 +9,10 @@
 <#@ import namespace="System.Runtime.CompilerServices" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="Dapper" #>
+
+// https://github.com/pvginkel/DapperContext
+// License: Apache License Version 2.0
+
 using System;
 using System.Collections.Generic;
 using System.Data;

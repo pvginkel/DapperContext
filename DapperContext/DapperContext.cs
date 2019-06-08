@@ -1,4 +1,8 @@
-﻿using System;
+﻿
+// https://github.com/pvginkel/DapperContext
+// License: Apache License Version 2.0
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
