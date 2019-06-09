@@ -9,88 +9,32 @@
 <#@ import namespace="System.Runtime.CompilerServices" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="Dapper" #>
-
-// https://github.com/pvginkel/DapperContext
-// License: Apache License Version 2.0
-
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DbContext;
+using Dapper;
 
-namespace Dapper
+namespace DapperContext
 {
-    public class DapperContext : IDisposable
+    public static class DapperExtensions
     {
-        private readonly IDbConnection connection;
-        private IDbTransaction transaction;
-        private bool committed;
-        private bool disposed;
-
-        public DapperContext(IDbConnection connection)
-        {
-            this.connection = connection;
-            this.transaction = connection.BeginTransaction();
-        }
-
-        public DapperContext(IDbConnection connection, IsolationLevel isolationLevel)
-        {
-            this.connection = connection;
-            this.transaction = connection.BeginTransaction(isolationLevel);
-        }
-
-        public void Commit()
-        {
-            committed = true;
-        }
-
-        public void Dispose()
-        {
-            if (!disposed)
-            {
-                if (transaction != null)
-                {
-                    if (committed)
-                        transaction.Commit();
-                    else
-                        transaction.Rollback();
-
-                    transaction.Dispose();
-                    transaction = null;
-                }
-
-                disposed = true;
-            }
-        }
-
 <#= GenerateMethods() #>
 
-        private CommandDefinition CreateCommandDefinition(CommandDefinition command)
+        private static CommandDefinition CreateCommandDefinition(IDbContext context, CommandDefinition command)
         {
             return new CommandDefinition(
                 command.CommandText,
                 command.Parameters,
-                transaction,
+                context.Transaction,
                 command.CommandTimeout,
                 command.CommandType,
                 command.Flags,
                 command.CancellationToken
             );
-        }
-    }
-
-    public static class DapperContextExtensions
-    {
-        public static DapperContext OpenContext(this IDbConnection connection)
-        {
-            return new DapperContext(connection);
-        }
-
-        public static DapperContext OpenContext(this IDbConnection connection, IsolationLevel isolationLevel)
-        {
-            return new DapperContext(connection, isolationLevel);
         }
     }
 }
@@ -118,7 +62,7 @@ namespace Dapper
                 if (transactionIndex.HasValue)
                     skipParameters.Add(transactionIndex.Value);
 
-                cb.Append("public ");
+                cb.Append("public static ");
                 GetMethodDeclaration(cb, method, skipParameters);
                 cb.AppendLine();
                 cb.AppendLine("{");
@@ -126,7 +70,7 @@ namespace Dapper
                 cb.Indent();
 
                 cb
-                    .Append("return connection.")
+                    .Append("return context.Connection.")
                     .Append(method.Name);
 
                 var genericArguments = method.GetGenericArguments();
@@ -150,7 +94,7 @@ namespace Dapper
                         cb.Append(", ");
 
                     if (i == transactionIndex)
-                        cb.Append("transaction");
+                        cb.Append("context.Transaction");
                     else
                     {
                         var parameter = method.GetParameters()[i];
@@ -158,7 +102,7 @@ namespace Dapper
                         if (parameter.ParameterType == typeof(CommandDefinition))
                         {
                             cb
-                                .Append("CreateCommandDefinition(")
+                                .Append("CreateCommandDefinition(context, ")
                                 .Append(parameter.Name)
                                 .Append(')');
                         }
@@ -200,18 +144,14 @@ namespace Dapper
                 cb.Append('>');
             }
 
-            cb.Append('(');
-
-            bool hadOne = false;
+            cb.Append("(this IDbContext context");
 
             for (var i = 0; i < method.GetParameters().Length; i++)
             {
                 if (skipParameters.Contains(i))
                     continue;
-                if (hadOne)
-                    cb.Append(", ");
-                else
-                    hadOne = true;
+
+                cb.Append(", ");
 
                 var parameter = method.GetParameters()[i];
 

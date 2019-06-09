@@ -44,7 +44,7 @@ namespace DapperContext.Test
                 if (transactionIndex.HasValue)
                     skipParameters.Add(transactionIndex.Value);
 
-                cb.Append("public ");
+                cb.Append("public static ");
                 GetMethodDeclaration(cb, method, skipParameters);
                 cb.AppendLine();
                 cb.AppendLine("{");
@@ -52,7 +52,7 @@ namespace DapperContext.Test
                 cb.Indent();
 
                 cb
-                    .Append("return connection.")
+                    .Append("return context.Connection.")
                     .Append(method.Name);
 
                 var genericArguments = method.GetGenericArguments();
@@ -76,7 +76,7 @@ namespace DapperContext.Test
                         cb.Append(", ");
 
                     if (i == transactionIndex)
-                        cb.Append("transaction");
+                        cb.Append("context.Transaction");
                     else
                     {
                         var parameter = method.GetParameters()[i];
@@ -84,7 +84,7 @@ namespace DapperContext.Test
                         if (parameter.ParameterType == typeof(CommandDefinition))
                         {
                             cb
-                                .Append("CreateCommandDefinition(")
+                                .Append("CreateCommandDefinition(context, ")
                                 .Append(parameter.Name)
                                 .Append(')');
                         }
@@ -126,18 +126,14 @@ namespace DapperContext.Test
                 cb.Append('>');
             }
 
-            cb.Append('(');
-
-            bool hadOne = false;
+            cb.Append("(this IDbContext context");
 
             for (var i = 0; i < method.GetParameters().Length; i++)
             {
                 if (skipParameters.Contains(i))
                     continue;
-                if (hadOne)
-                    cb.Append(", ");
-                else
-                    hadOne = true;
+
+                cb.Append(", ");
 
                 var parameter = method.GetParameters()[i];
 

@@ -6,19 +6,22 @@
     <PackageReference Include="Dapper" Version="1.60.6" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="DapperContext.tt">
+    <ProjectReference Include="..\DbContext\DbContext.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="DapperExtensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>DapperContext.cs</LastGenOutput>
+      <LastGenOutput>DapperExtensions.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="DapperContext.cs">
+    <Compile Update="DapperExtensions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>DapperContext.tt</DependentUpon>
+      <DependentUpon>DapperExtensions.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>
