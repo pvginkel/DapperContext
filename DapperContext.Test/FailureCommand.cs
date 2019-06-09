@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DapperContext.Test
 {
-    public class FailureCommand : IDbCommand
+    public class FailureCommand : DbCommand
     {
         private readonly FailureCallbacks _callbacks;
 
@@ -19,85 +21,100 @@ namespace DapperContext.Test
             _callbacks = callbacks;
         }
 
-        public IDbConnection Connection
+        protected override DbConnection DbConnection
         {
-            get => Owner.Connection;
+            get => (DbConnection)Owner.Connection;
             set => Owner.Connection = ((FailureConnection)value).Owner;
         }
 
-        public IDbTransaction Transaction
+        protected override DbParameterCollection DbParameterCollection => (DbParameterCollection)Owner.Parameters;
+
+        protected override DbTransaction DbTransaction
         {
-            get => Owner.Transaction;
+            get => (DbTransaction)Owner.Transaction;
             set => Owner.Transaction = ((FailureTransaction)value).Owner;
         }
 
-        public string CommandText
+        public override bool DesignTimeVisible { get; set; }
+
+        public override string CommandText
         {
             get => Owner.CommandText;
             set => Owner.CommandText = value;
         }
 
-        public int CommandTimeout
+        public override int CommandTimeout
         {
             get => Owner.CommandTimeout;
             set => Owner.CommandTimeout = value;
         }
 
-        public CommandType CommandType
+        public override CommandType CommandType
         {
             get => Owner.CommandType;
             set => Owner.CommandType = value;
         }
 
-        public IDataParameterCollection Parameters => Owner.Parameters;
-
-        public UpdateRowSource UpdatedRowSource
+        public override UpdateRowSource UpdatedRowSource
         {
             get => Owner.UpdatedRowSource;
             set => Owner.UpdatedRowSource = value;
         }
 
-        public void Prepare()
+        public override void Prepare()
         {
             Owner.Prepare();
         }
 
-        public void Cancel()
+        public override void Cancel()
         {
             Owner.Cancel();
         }
 
-        public IDbDataParameter CreateParameter()
+        protected override DbParameter CreateDbParameter()
         {
-            return Owner.CreateParameter();
+            return (DbParameter)Owner.CreateParameter();
         }
 
-        public int ExecuteNonQuery()
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+        {
+            _callbacks.ExecuteCommand?.Invoke();
+            return (DbDataReader)Owner.ExecuteReader(behavior);
+        }
+
+        public override int ExecuteNonQuery()
         {
             _callbacks.ExecuteCommand?.Invoke();
             return Owner.ExecuteNonQuery();
         }
 
-        public IDataReader ExecuteReader()
-        {
-            _callbacks.ExecuteCommand?.Invoke();
-            return Owner.ExecuteReader();
-        }
-
-        public IDataReader ExecuteReader(CommandBehavior behavior)
-        {
-            _callbacks.ExecuteCommand?.Invoke();
-            return Owner.ExecuteReader(behavior);
-        }
-
-        public object ExecuteScalar()
+        public override object ExecuteScalar()
         {
             _callbacks.ExecuteCommand?.Invoke();
             return Owner.ExecuteScalar();
         }
 
-        public void Dispose()
+        public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
         {
+            _callbacks.ExecuteCommand?.Invoke();
+            return ((DbCommand)Owner).ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+        {
+            _callbacks.ExecuteCommand?.Invoke();
+            return ((DbCommand)Owner).ExecuteReaderAsync(behavior, cancellationToken);
+        }
+
+        public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+        {
+            _callbacks.ExecuteCommand?.Invoke();
+            return ((DbCommand)Owner).ExecuteScalarAsync(cancellationToken);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
             Owner.Dispose();
         }
     }

@@ -54,7 +54,6 @@ namespace DapperContext.Test
         {
             _callbacks.ExecuteCommand = () => throw new TimeoutException();
 
-            bool failed = false;
             int iteration = 0;
 
             try
@@ -64,15 +63,71 @@ namespace DapperContext.Test
                     iteration++;
                     context.Execute("delete from Customer");
                 });
+
+                Assert.Fail();
             }
-            catch
+            catch (Exception ex)
             {
-                failed = true;
+                Assert.IsInstanceOf<TimeoutException>(ex);
+            }
+            finally
+            {
+                _callbacks.ExecuteCommand = null;
             }
 
-            _callbacks.ExecuteCommand = null;
+            Assert.AreEqual(3, iteration);
+        }
 
-            Assert.IsTrue(failed);
+        [Test]
+        public async Task SingleRetryAsync()
+        {
+            int iteration = 0;
+
+            await Db.WithContextAsync(async context =>
+            {
+                if (++iteration > 1)
+                    _callbacks.ExecuteCommand = null;
+                else
+                    _callbacks.ExecuteCommand = () => throw new TimeoutException();
+
+                await context.ExecuteAsync("delete from Customer");
+            });
+
+            Assert.AreEqual(2, iteration);
+
+            int count = await Db.WithContextAsync(async context =>
+            {
+                return await context.ExecuteScalarAsync<int>("select count(*) from Customer");
+            });
+
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public async Task FailureAsync()
+        {
+            _callbacks.ExecuteCommand = () => throw new TimeoutException();
+
+            int iteration = 0;
+
+            try
+            {
+                await Db.WithContextAsync(async context =>
+                {
+                    iteration++;
+                    await context.ExecuteAsync("delete from Customer");
+                });
+
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsInstanceOf<TimeoutException>(ex);
+            }
+            finally
+            {
+                _callbacks.ExecuteCommand = null;
+            }
 
             Assert.AreEqual(3, iteration);
         }

@@ -1,29 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DapperContext.Test
 {
-    public class FailureConnection : IDbConnection
+    public class FailureConnection : DbConnection
     {
         private readonly FailureCallbacks _callbacks;
 
         public IDbConnection Owner { get; }
 
-        public string ConnectionString
+        public override string ConnectionString
         {
             get => Owner.ConnectionString;
             set => Owner.ConnectionString = value;
         }
 
-        public int ConnectionTimeout => Owner.ConnectionTimeout;
+        public override int ConnectionTimeout => Owner.ConnectionTimeout;
 
-        public string Database => Owner.Database;
+        public override string Database => Owner.Database;
 
-        public ConnectionState State => Owner.State;
+        public override string DataSource => ((DbConnection)Owner).DataSource;
+
+        public override string ServerVersion => ((DbConnection)Owner).ServerVersion;
+
+        public override ConnectionState State => Owner.State;
 
         public FailureConnection(IDbConnection owner, FailureCallbacks callbacks)
         {
@@ -36,41 +42,42 @@ namespace DapperContext.Test
             _callbacks = callbacks;
         }
 
-        public IDbTransaction BeginTransaction()
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
             _callbacks.BeginTransaction?.Invoke();
-            return new FailureTransaction(Owner.BeginTransaction(), _callbacks);
+            return new FailureTransaction(Owner.BeginTransaction(isolationLevel), _callbacks);
         }
 
-        public IDbTransaction BeginTransaction(IsolationLevel il)
-        {
-            _callbacks.BeginTransaction?.Invoke();
-            return new FailureTransaction(Owner.BeginTransaction(il), _callbacks);
-        }
-
-        public void Close()
+        public override void Close()
         {
             Owner.Close();
         }
 
-        public void ChangeDatabase(string databaseName)
+        public override void ChangeDatabase(string databaseName)
         {
             Owner.ChangeDatabase(databaseName);
         }
 
-        public IDbCommand CreateCommand()
+        protected override DbCommand CreateDbCommand()
         {
             return new FailureCommand(Owner.CreateCommand(), _callbacks);
         }
 
-        public void Open()
+        public override void Open()
         {
             _callbacks.Open?.Invoke();
             Owner.Open();
         }
 
-        public void Dispose()
+        public override Task OpenAsync(CancellationToken cancellationToken)
         {
+            _callbacks.Open?.Invoke();
+            return ((DbConnection)Owner).OpenAsync(cancellationToken);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
             Owner.Dispose();
         }
     }

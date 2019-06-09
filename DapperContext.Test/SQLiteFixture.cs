@@ -17,13 +17,13 @@ namespace DapperContext.Test
         [Test]
         public void SimpleQuery()
         {
-            Db.WithContext(context =>
+            var customers = Db.WithContext(context =>
             {
-                var customers = context.Query<Customer>("select RowId, * from Customer order by RowId").ToList();
-
-                Assert.AreEqual(3, customers.Count);
-                Assert.AreEqual("Customer 1", customers[0].Name);
+                return context.Query<Customer>("select RowId, * from Customer order by RowId").ToList();
             });
+
+            Assert.AreEqual(3, customers.Count);
+            Assert.AreEqual("Customer 1", customers[0].Name);
         }
 
         [Test]
@@ -36,11 +36,12 @@ namespace DapperContext.Test
                 context.Rollback();
             });
 
-            Db.WithContext(context =>
+            int count = Db.WithContext(context =>
             {
-                int count = context.ExecuteScalar<int>("select count(*) from Customer");
-                Assert.AreEqual(3, count);
+                return context.ExecuteScalar<int>("select count(*) from Customer");
             });
+
+            Assert.AreEqual(3, count);
         }
     }
 }

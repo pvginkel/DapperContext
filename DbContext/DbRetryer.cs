@@ -53,5 +53,50 @@ namespace DbContext
 
             return action();
         }
+
+        public static async Task RetryAsync(IDbRetryPolicy policy, Func<Task> action, CancellationToken cancellationToken = default)
+        {
+            if (policy == null)
+                throw new ArgumentNullException(nameof(policy));
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            for (int i = 0; i < policy.Retries - 1; i++)
+            {
+                try
+                {
+                    await action();
+                    return;
+                }
+                catch (Exception ex) when (policy.ShouldRetry(ex))
+                {
+                    await Task.Delay(policy.Delay, cancellationToken);
+                }
+            }
+
+            await action();
+        }
+
+        public static async Task<T> RetryAsync<T>(IDbRetryPolicy policy, Func<Task<T>> action, CancellationToken cancellationToken = default)
+        {
+            if (policy == null)
+                throw new ArgumentNullException(nameof(policy));
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            for (int i = 0; i < policy.Retries - 1; i++)
+            {
+                try
+                {
+                    return await action();
+                }
+                catch (Exception ex) when (policy.ShouldRetry(ex))
+                {
+                    await Task.Delay(policy.Delay, cancellationToken);
+                }
+            }
+
+            return await action();
+        }
     }
 }

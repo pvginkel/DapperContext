@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DapperContext.Test
 {
-    public class FailureTransaction : IDbTransaction
+    public class FailureTransaction : DbTransaction
     {
         private readonly FailureCallbacks _callbacks;
 
@@ -19,24 +20,24 @@ namespace DapperContext.Test
             _callbacks = callbacks;
         }
 
-        public IDbConnection Connection => Owner.Connection;
+        protected override DbConnection DbConnection => (DbConnection)Owner.Connection;
 
-        public IsolationLevel IsolationLevel => Owner.IsolationLevel;
+        public override IsolationLevel IsolationLevel => Owner.IsolationLevel;
 
-        public void Commit()
+        public override void Commit()
         {
             _callbacks.CommitTransaction?.Invoke();
             Owner.Commit();
         }
 
-        public void Rollback()
+        public override void Rollback()
         {
             _callbacks.RollbackTransaction?.Invoke();
-            Owner.Rollback();
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
             Owner.Dispose();
         }
     }
