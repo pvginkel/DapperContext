@@ -1,5 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
+    <Authors>Pieter van Ginkel</Authors>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Copyright>Pieter van Ginkel © 2019</Copyright>
+    <PackageProjectUrl>https://github.com/pvginkel/DapperContext</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pvginkel/DapperContext</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>SimpleDbContext</PackageId>
+    <Description>Provides a simple database transaction abstraction with automatic retry support.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 </Project>
