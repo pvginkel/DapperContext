@@ -8,13 +8,14 @@ namespace DbContext
 {
     public class DbRetryPolicy : IDbRetryPolicy
     {
-        public int Retries { get; }
-        public TimeSpan Delay { get; }
+        public IDbRetryStrategy Strategy { get; }
 
-        public DbRetryPolicy(int retries, TimeSpan delay)
+        public DbRetryPolicy(IDbRetryStrategy strategy)
         {
-            Retries = retries;
-            Delay = delay;
+            if (strategy == null)
+                throw new ArgumentNullException(nameof(strategy));
+
+            Strategy = strategy;
         }
 
         public virtual bool ShouldRetry(Exception exception)

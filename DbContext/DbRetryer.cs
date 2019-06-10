@@ -16,7 +16,9 @@ namespace DbContext
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            for (int i = 0; i < policy.Retries - 1; i++)
+            IEnumerator<TimeSpan> intervals = null;
+
+            while (true)
             {
                 try
                 {
@@ -25,11 +27,13 @@ namespace DbContext
                 }
                 catch (Exception ex) when (policy.ShouldRetry(ex))
                 {
-                    Thread.Sleep(policy.Delay);
+                    if (intervals == null)
+                        intervals = policy.Strategy.GetIntervals().GetEnumerator();
+                    if (!intervals.MoveNext())
+                        throw;
+                    Thread.Sleep(intervals.Current);
                 }
             }
-
-            action();
         }
 
         public static T Retry<T>(IDbRetryPolicy policy, Func<T> action)
@@ -39,7 +43,9 @@ namespace DbContext
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            for (int i = 0; i < policy.Retries - 1; i++)
+            IEnumerator<TimeSpan> intervals = null;
+
+            while (true)
             {
                 try
                 {
@@ -47,11 +53,13 @@ namespace DbContext
                 }
                 catch (Exception ex) when (policy.ShouldRetry(ex))
                 {
-                    Thread.Sleep(policy.Delay);
+                    if (intervals == null)
+                        intervals = policy.Strategy.GetIntervals().GetEnumerator();
+                    if (!intervals.MoveNext())
+                        throw;
+                    Thread.Sleep(intervals.Current);
                 }
             }
-
-            return action();
         }
 
         public static async Task RetryAsync(IDbRetryPolicy policy, Func<Task> action, CancellationToken cancellationToken = default)
@@ -61,7 +69,9 @@ namespace DbContext
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            for (int i = 0; i < policy.Retries - 1; i++)
+            IEnumerator<TimeSpan> intervals = null;
+
+            while (true)
             {
                 try
                 {
@@ -70,11 +80,13 @@ namespace DbContext
                 }
                 catch (Exception ex) when (policy.ShouldRetry(ex))
                 {
-                    await Task.Delay(policy.Delay, cancellationToken);
+                    if (intervals == null)
+                        intervals = policy.Strategy.GetIntervals().GetEnumerator();
+                    if (!intervals.MoveNext())
+                        throw;
+                    await Task.Delay(intervals.Current, cancellationToken);
                 }
             }
-
-            await action();
         }
 
         public static async Task<T> RetryAsync<T>(IDbRetryPolicy policy, Func<Task<T>> action, CancellationToken cancellationToken = default)
@@ -84,7 +96,9 @@ namespace DbContext
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            for (int i = 0; i < policy.Retries - 1; i++)
+            IEnumerator<TimeSpan> intervals = null;
+
+            while (true)
             {
                 try
                 {
@@ -92,11 +106,13 @@ namespace DbContext
                 }
                 catch (Exception ex) when (policy.ShouldRetry(ex))
                 {
-                    await Task.Delay(policy.Delay, cancellationToken);
+                    if (intervals == null)
+                        intervals = policy.Strategy.GetIntervals().GetEnumerator();
+                    if (!intervals.MoveNext())
+                        throw;
+                    await Task.Delay(intervals.Current, cancellationToken);
                 }
             }
-
-            return await action();
         }
     }
 }

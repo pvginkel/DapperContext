@@ -9,8 +9,11 @@ namespace DbContext
 {
     public class DbAzureRetryPolicy : DbRetryPolicy
     {
-        public DbAzureRetryPolicy(int retries, TimeSpan delay)
-            : base(retries, delay)
+        public static DbAzureRetryPolicy DefaultInteractivePolicy = new DbAzureRetryPolicy(new DbRetryFixedStrategy(3, TimeSpan.FromSeconds(0.5)));
+        public static DbAzureRetryPolicy DefaultBatchPolicy = new DbAzureRetryPolicy(new DbRetryExponentialBackoffStrategy(5, TimeSpan.FromSeconds(2)));
+
+        public DbAzureRetryPolicy(IDbRetryStrategy strategy)
+            : base(strategy)
         {
         }
 

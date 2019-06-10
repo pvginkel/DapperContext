@@ -19,7 +19,7 @@ namespace DapperContext.Test
             return new DbContextFactory(
                 () => new FailureConnection(CreateConnection(), _callbacks),
                 new DbContextConfiguration(
-                    new DbAzureRetryPolicy(3, default)
+                    new DbAzureRetryPolicy(new DbRetryFixedStrategy(3, default))
                 )
             );
         }

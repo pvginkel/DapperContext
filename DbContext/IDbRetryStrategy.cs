@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace DbContext
 {
-    public interface IDbRetryPolicy
+    public interface IDbRetryStrategy
     {
-        IDbRetryStrategy Strategy { get; }
-
-        bool ShouldRetry(Exception exception);
+        IEnumerable<TimeSpan> GetIntervals();
     }
 }
