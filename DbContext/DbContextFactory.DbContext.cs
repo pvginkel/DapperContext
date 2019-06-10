@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace DbContext
             private bool _disposed;
             private IDbConnection _connection;
             private IDbTransaction _transaction;
+            private readonly IDbContextEvents _events;
+            private IDictionary _context;
 
             public IDbConnection Connection
             {
@@ -35,10 +38,23 @@ namespace DbContext
 
             public DbContextCommitState CommitState { get; private set; }
 
-            public DbContext(IDbConnection connection, IDbTransaction transaction)
+            public IDictionary Context
+            {
+                get
+                {
+                    if (_context == null)
+                        _context = new Hashtable();
+                    return _context;
+                }
+            }
+
+            public DbContext(IDbConnection connection, IDbTransaction transaction, IDbContextEvents events)
             {
                 _connection = connection;
                 _transaction = transaction;
+                _events = events;
+
+                _events?.Opened(this);
             }
 
             public void Commit()
@@ -67,6 +83,19 @@ namespace DbContext
                 {
                     if (_transaction != null)
                     {
+                        // If neither commit or rollback was called explicitly, we force
+                        // a rollback.
+                        if (CommitState == DbContextCommitState.None)
+                            CommitState = DbContextCommitState.Rollback;
+
+                        if (_events != null)
+                        {
+                            if (CommitState == DbContextCommitState.Commit)
+                                _events.BeforeCommit(this);
+                            else
+                                _events.BeforeRollback(this);
+                        }
+
                         using (_transaction)
                         {
                             if (CommitState == DbContextCommitState.Commit)
@@ -76,6 +105,14 @@ namespace DbContext
                         }
 
                         _transaction = null;
+
+                        if (_events != null)
+                        {
+                            if (CommitState == DbContextCommitState.Commit)
+                                _events.AfterCommit(this);
+                            else
+                                _events.AfterRollback(this);
+                        }
                     }
 
                     if (_connection != null)
@@ -83,6 +120,8 @@ namespace DbContext
                         _connection.Dispose();
                         _connection = null;
                     }
+
+                    _events?.Closed(this);
 
                     _disposed = true;
                 }

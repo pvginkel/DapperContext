@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace DbContext
         IDbConnection Connection { get; }
         IDbTransaction Transaction { get; }
         DbContextCommitState CommitState { get; }
+        IDictionary Context { get; }
 
         void Commit();
         void Rollback();

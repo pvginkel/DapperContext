@@ -47,7 +47,7 @@ namespace DbContext
                 ? connection.BeginTransaction(isolationLevel.Value)
                 : connection.BeginTransaction();
 
-            return new DbContext(connection, transaction);
+            return new DbContext(connection, transaction, Configuration?.Events);
         }
 
         public Task<IDbContext> OpenContextAsync(CancellationToken cancellationToken = default)
@@ -73,7 +73,7 @@ namespace DbContext
                 ? connection.BeginTransaction(isolationLevel.Value)
                 : connection.BeginTransaction();
 
-            return new DbContext(connection, transaction);
+            return new DbContext(connection, transaction, Configuration?.Events);
         }
     }
 }
