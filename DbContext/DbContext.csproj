@@ -9,9 +9,10 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>SimpleDbContext</PackageId>
     <Description>Provides a simple database transaction abstraction with automatic retry support.</Description>
+    <Version>1.1.0</Version>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.1" Condition="'$(TargetFramework)' == 'netstandard2.0'"/>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.1" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE.txt">
