@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <Authors>Pieter van Ginkel</Authors>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <Copyright>Pieter van Ginkel © 2019</Copyright>
@@ -10,6 +10,9 @@
     <PackageId>SimpleDbContext</PackageId>
     <Description>Provides a simple database transaction abstraction with automatic retry support.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.1" Condition="'$(TargetFramework)' == 'netstandard2.0'"/>
+  </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE.txt">
       <Pack>True</Pack>
